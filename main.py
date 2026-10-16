@@ -1,4 +1,9 @@
-from src.tools.tools import web_search, scrape_url
+import os
 
-result = scrape_url("https://www.nature.com/articles/d41586-026-02494-5")
-print(result)
+os.environ.pop("SSL_CERT_FILE", None)  # must come before the imports below
+
+from src.pipelines.pipeline import run_research_pipeline
+
+topic = "EV impact on fuel economy"
+
+run_research_pipeline(topic)
