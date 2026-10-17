@@ -13,6 +13,15 @@ load_dotenv()
 
 tavily = TavilyClient(api_key=os.getenv("TAVILY_API_KEY"))
 
+JOB_SITES = [
+    "brightermonday.co.ke",
+    "myjobmag.co.ke",
+    "linkedIn.com",
+    "remoteok.com",
+    "weworkremotely.com",
+    "wellfound.com",
+]
+
 
 @tool
 def web_search(query: str) -> str:
@@ -113,3 +122,20 @@ def scrape_url(url: str) -> str:
 
     except Exception as e:
         return f"Could not scrape URL: {str(e)}"
+
+
+@tool
+def search_jobs(query: str) -> str:
+    """Search job boards for currently open roles. Returns Title, URL and Snippet."""
+    results = tavily.search(
+        query=query,
+        max_results=8,
+        include_domains=JOB_SITES,
+        time_range="month",
+    )
+    out = [
+        f"Title: {r['title']}\nURL: {r['url']}\nSnippet: {r['content'][:300]}\n"
+        for r in results["results"]
+    ]
+
+    return "\n----\n".join(out) or f"No {query} jobs found."

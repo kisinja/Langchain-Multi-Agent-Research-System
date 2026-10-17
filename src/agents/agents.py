@@ -2,7 +2,7 @@ from langchain.agents import create_agent
 from langchain_ollama import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from src.tools.tools import web_search, scrape_url
+from src.tools.tools import web_search, scrape_url, search_jobs
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,6 +14,27 @@ llm = ChatOllama(
     reasoning=False,  # turns thinking off
     num_predict=300,
 )
+job_llm = ChatOllama(
+    model="qwen3.5:2b",
+    temperature=0,
+    reasoning=False,  # turns thinking off
+    num_predict=1500,
+)
+
+# Job search tool prompt
+JOB_PROMPT = """You are a job-hunting assistant for a fullstack developer
+(Next.js, TypeScript, Prisma, PostgreSQL) moving into agentic AI engineering roles,
+open to Kenya (on-site) and remote work abroad.
+
+Rules:
+- Call search_jobs at least twice with different queries (e.g. Kenya, remote worldwide).
+- Optionally call scrape_url on the 1-2 best listings to get salary and requirements.
+- Show salaries in KES per month. If a listing uses another currency or period, show the
+  original and an approximate KES/month conversion, noting the rate is approximate.
+  If no salary is listed, write "not listed". Never invent salaries.
+- Only include URLs that appeared in tool results.
+- Output a table: Role | Company | Location/Remote | Salary (KES/month) | Why it fits | URL
+"""
 
 
 # 1st Agent: Search Agent
@@ -24,6 +45,11 @@ def build_search_agent():
 # 2nd Agent: Reader Agent
 def build_reader_agent():
     return create_agent(model=llm, tools=[scrape_url])
+
+
+# 3rd Agent: Job Search Agent
+def build_job_agent():
+    return create_agent(model=job_llm, tools=[scrape_url, search_jobs], system_prompt=JOB_PROMPT)
 
 
 # writer chain
